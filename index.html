@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Supplies Order — prototype</title>
+<style>
+:root{--brand:#0f766e;--brand2:#115e59;--bg:#f3f6f5;--card:#fff;--ink:#17312e;--muted:#5f7471;--line:#dfe7e5;--warn:#b45309;--warnbg:#fff7e6;--bad:#b91c1c;--badbg:#fdecec;--ok:#15803d;--okbg:#e8f6ee;--radius:16px}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--brand)}
+.demo-strip{background:#fef3c7;color:#78350f;font-size:12.5px;text-align:center;padding:5px 10px;border-bottom:1px solid #fcd34d}
+.topbar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--brand);color:#fff}
+.topbar h1{font-size:18px;margin:0;flex:1;font-weight:650;letter-spacing:.2px}
+.topbar .sub{font-size:12.5px;opacity:.85;font-weight:400;display:block}
+.linkbtn{background:rgba(255,255,255,.15);border:0;color:#fff;padding:8px 12px;border-radius:10px;font-size:14px}
+.wrap{max-width:720px;margin:0 auto;padding:0 14px 120px}
+.banner{margin:14px 0 10px;padding:12px 14px;border-radius:14px;background:var(--okbg);color:#14532d;display:flex;gap:10px;align-items:center}
+.banner.closed{background:var(--badbg);color:#7f1d1d}
+.banner.soon{background:var(--warnbg);color:#7c2d12}
+.banner b{display:block}
+.banner .cd{margin-left:auto;text-align:right;font-weight:700;white-space:nowrap}
+.searchbar{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0 10px}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:0 12px;height:52px}
+.search:focus-within{border-color:var(--brand)}
+.search input{border:0;outline:0;flex:1;font-size:17px;background:transparent;min-width:0}
+.search .clear{border:0;background:#e8eeec;border-radius:50%;width:28px;height:28px;font-size:16px;line-height:1}
+.grid6{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+@media(min-width:620px){.grid6{grid-template-columns:1fr 1fr 1fr}}
+.catbtn{border:0;border-radius:20px;padding:18px 14px;min-height:128px;text-align:left;color:#fff;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.catbtn svg{width:40px;height:40px}
+.catbtn .n{font-size:18px;font-weight:650}
+.catbtn .c{font-size:13px;opacity:.9}
+.altrow{margin-top:14px;display:flex;gap:10px}
+.bigbtn{flex:1;border:2px dashed #9fb8b3;background:#fff;border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;text-align:left;font-size:15px}
+.bigbtn svg{width:30px;height:30px;color:var(--brand);flex:none}
+.sectionhead{display:flex;align-items:center;gap:10px;margin:6px 0 8px}
+.sectionhead h2{margin:0;font-size:20px}
+.back{border:0;background:#fff;border-radius:12px;width:44px;height:44px;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.plist{display:flex;flex-direction:column;gap:8px}
+.prod{background:#fff;border-radius:14px;padding:12px 12px 12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.prod .info{flex:1;min-width:0}
+.prod .nm{font-weight:600}
+.prod .meta{font-size:13px;color:var(--muted)}
+.prod .tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:99px;background:#e6efed;color:var(--brand2);margin-right:4px}
+.prod.has{outline:2px solid #99d5cb}
+.step{display:flex;align-items:center;gap:4px;flex:none}
+.step button{width:44px;height:44px;border-radius:12px;border:0;background:#e6f2ef;color:var(--brand2);font-size:24px;line-height:1;font-weight:600}
+.step button.plus{background:var(--brand);color:#fff}
+.step .q{min-width:30px;text-align:center;font-weight:700;font-size:18px}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+.basketbar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 30%);z-index:10}
+.basketbar button{width:100%;max-width:692px;margin:0 auto;display:flex;align-items:center;gap:12px;height:58px;border:0;border-radius:16px;background:var(--brand);color:#fff;font-size:17px;font-weight:650;padding:0 18px;box-shadow:0 4px 14px rgba(15,118,110,.35)}
+.basketbar button[disabled]{background:#9fb8b3;box-shadow:none}
+.basketbar .cnt{background:#fff;color:var(--brand);border-radius:99px;min-width:30px;height:30px;display:grid;place-items:center;font-size:15px;padding:0 8px}
+.basketbar .go{margin-left:auto}
+.card{background:#fff;border-radius:var(--radius);padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-bottom:12px}
+.field{display:block;margin:10px 0}
+.field span{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;border:2px solid var(--line);border-radius:12px;padding:12px;font-size:16px;background:#fff}
+.field textarea{min-height:110px}
+.primary{width:100%;height:56px;border:0;border-radius:16px;background:var(--brand);color:#fff;font-size:17px;font-weight:650}
+.primary[disabled]{background:#9fb8b3}
+.sitepick{display:grid;gap:8px}
+.sitepick button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:14px;text-align:left;font-size:16px}
+.sitepick button.on{border-color:var(--brand);background:#e6f2ef;font-weight:650}
+.locked{text-align:center;padding:30px 18px}
+.locked svg{width:56px;height:56px;color:var(--brand)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#17312e;color:#fff;padding:12px 18px;border-radius:12px;z-index:50;font-size:15px;max-width:90vw}
+.photoprev{max-width:100%;max-height:260px;border-radius:12px;display:block;margin-top:8px}
+/* ---------- manager (Access-style front end) ---------- */
+.mgr{min-height:100vh;display:flex;flex-direction:column}
+.mgr .topbar{background:#1f3b4d}
+.mgrbody{display:flex;flex:1;min-height:0}
+.side{width:220px;background:#e9eef2;border-right:1px solid #cfd9e0;padding:10px 8px;flex:none}
+.side button{display:flex;width:100%;align-items:center;gap:8px;border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:10px;font-size:15px;color:#1f3b4d}
+.side button.on{background:#fff;font-weight:650;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#6b7f8c;padding:12px 12px 4px}
+.main{flex:1;padding:18px 22px 60px;min-width:0;overflow:auto}
+@media(max-width:860px){.mgrbody{flex-direction:column}.side{width:auto;display:flex;overflow-x:auto;padding:6px;border-right:0;border-bottom:1px solid #cfd9e0}.side button{white-space:nowrap;width:auto}.side .grp{display:none}.main{padding:14px 12px 60px}}
+.formtitle{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.formtitle h2{margin:0;font-size:22px;color:#1f3b4d}
+.formtitle .sp{flex:1}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;background:#e6efed;color:var(--brand2);white-space:nowrap}
+.pill.warn{background:var(--warnbg);color:var(--warn)}
+.pill.bad{background:var(--badbg);color:var(--bad)}
+.pill.grey{background:#eceff1;color:#455a64}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid #d7e0e6;border-radius:12px;padding:12px 14px}
+.kpi .v{font-size:26px;font-weight:700;color:#1f3b4d}
+.kpi .l{font-size:13px;color:#5f7380}
+.panel{background:#fff;border:1px solid #d7e0e6;border-radius:12px;margin-bottom:14px;overflow:hidden}
+.panel>h3{margin:0;padding:10px 14px;font-size:15px;background:#f1f5f8;border-bottom:1px solid #d7e0e6;color:#1f3b4d;display:flex;gap:8px;align-items:center}
+.panel>h3 .sp{flex:1}
+.panel .pad{padding:12px 14px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{background:#f7f9fb;text-align:left;font-weight:650;color:#3c5566;padding:8px 10px;border-bottom:1px solid #d7e0e6;white-space:nowrap;position:sticky;top:0}
+.tbl td{padding:7px 10px;border-bottom:1px solid #edf1f4;vertical-align:middle}
+.tbl tr:nth-child(even) td{background:#fbfcfd}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tbl input,.tbl select{border:1px solid #c9d5dd;border-radius:6px;padding:5px 6px;font-size:14px;width:100%;background:#fff}
+.tbl input.num{width:76px;text-align:right}
+.tblwrap{overflow:auto;max-height:560px}
+.btn{border:1px solid #b9c7d1;background:#fff;border-radius:8px;padding:7px 12px;font-size:14px;color:#1f3b4d;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.pri{background:#1f3b4d;border-color:#1f3b4d;color:#fff}
+.btn.grn{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.sm{padding:4px 9px;font-size:13px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar label{font-size:14px;color:#3c5566;display:flex;gap:6px;align-items:center}
+.toolbar select,.toolbar input{border:1px solid #b9c7d1;border-radius:8px;padding:7px 9px;font-size:14px;background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.note{font-size:13.5px;color:#5f7380}
+.alert{padding:10px 14px;border-radius:10px;background:var(--warnbg);color:#7c2d12;margin-bottom:12px;font-size:14px}
+.alert.info{background:#e8f1f8;color:#1f3b4d}
+.match{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid #edf1f4;align-items:flex-start}
+.match img{width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #d7e0e6;flex:none}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1100px){.cols2{grid-template-columns:1fr}}
+.picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;padding:12px}
+.pick{border:1px solid #d7e0e6;border-radius:10px;padding:10px 12px;font-size:13.5px}
+.pick h4{margin:0 0 6px;font-size:14px}
+.pick ul{margin:0;padding-left:18px}
+.results{border:1px solid #c9d5dd;border-radius:8px;max-height:240px;overflow:auto;background:#fff}
+.results button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #edf1f4;background:#fff;padding:8px 10px;font-size:14px}
+.results button:hover{background:#eef6f4}
+.pinbox{max-width:360px;margin:60px auto;background:#fff;border-radius:18px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.08);text-align:center}
+.pinbox input{width:100%;font-size:28px;letter-spacing:12px;text-align:center;border:2px solid var(--line);border-radius:12px;padding:10px}
+.supgrp h3 .em{font-weight:400;color:#5f7380;font-size:13px}
+@media print{.noprint{display:none!important}}
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
+.tbl td.nw{white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+/* =====================================================================
+   Supplies Order — clickable prototype
+   ALL PRODUCTS, SITES, SUPPLIERS AND ORDERS HERE ARE MADE-UP EXAMPLE DATA.
+   Data lives in this browser's localStorage only.
+   Demo clock: add ?now=2026-10-29 to the URL (or use Settings) to simulate a date.
+   ===================================================================== */
+const LS='supplyorder.demo.v1', LS_ME=LS+'.me', LS_NOW=LS+'.now';
+const SV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">';
+const ICON={
+ CH:SV+'<path d="M9 2.5h5v3.5H9z"/><path d="M14 3.5h3.5l1.5 2"/><path d="M8.5 6h6v2.5l2.5 3.5v9.5H6.5V12l2-3.5z"/><path d="M6.5 14h10.5"/></svg>',
+ PB:SV+'<ellipse cx="7.5" cy="12" rx="4" ry="7"/><ellipse cx="7.5" cy="12" rx="1.3" ry="2.3"/><path d="M7.5 5h9c2.2 0 4 3.1 4 7s-1.8 7-4 7h-9"/></svg>',
+ CM:SV+'<path d="M12 2v11"/><path d="M7 13h10l2 8H5z"/><path d="M9 16v5M12 16v5M15 16v5"/></svg>',
+ WR:SV+'<path d="M12 3c3 4 6 7.4 6 11a6 6 0 0 1-12 0c0-3.6 3-7 6-11z"/><path d="M9.5 15a2.5 2.5 0 0 0 2.5 2.5"/></svg>',
+ PP:SV+'<path d="M12 2.5l8 3v6c0 5-3.5 8.6-8 10-4.5-1.4-8-5-8-10v-6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+ EQ:SV+'<path d="M4.5 9h15l-2 12h-11z"/><path d="M5 9c0-3.3 3.1-6 7-6s7 2.7 7 6"/><path d="M8 13h8"/></svg>',
+ cam:SV+'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+ lock:SV+'<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+ search:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#5f7471" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+ back:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#17312e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+ bag:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.3 12H6.3z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>'
+};
+const CATS=[
+ {id:'CH',name:'Chemicals',color:'#0e7490'},
+ {id:'PB',name:'Paper & Bags',color:'#8a6a12'},
+ {id:'CM',name:'Cloths & Mops',color:'#2563a8'},
+ {id:'WR',name:'Washroom',color:'#0f766e'},
+ {id:'PP',name:'PPE',color:'#a43d5c'},
+ {id:'EQ',name:'Equipment',color:'#55606e'}
+];
+const SUPPLIERS0=[
+ {id:'BW',name:'Brightwell Supplies Ltd (example)',email:'orders@brightwell-supplies.example',account:'BW-20417'},
+ {id:'NP',name:'NorthPaper Hygiene (example)',email:'sales@northpaper.example',account:'NP-5520'},
+ {id:'SH',name:'SafeHands PPE (example)',email:'trade@safehands-ppe.example',account:'SH-0093'}
+];
+const SITES0=['Riverside Business Park','St Anne\'s Primary School','Kingsgate Offices','Elm Court Care Home','Harbour View Hotel','Northgate Medical Centre','Brookfield Leisure Centre','Station Road Retail Units'];
+// [name, unit the cleaner orders in, units per supplier case, supplier]
+const RAW={
+CH:[['Multi-surface cleaner','5 L bottle',2,'BW'],['Multi-surface cleaner trigger','750 ml spray',6,'BW'],['Washroom cleaner','5 L bottle',2,'BW'],['Washroom cleaner trigger','750 ml spray',6,'BW'],['Toilet cleaner & descaler','750 ml bottle',12,'BW'],['Thick bleach','5 L bottle',2,'BW'],['Thick bleach','750 ml bottle',12,'BW'],['Glass cleaner','5 L bottle',2,'BW'],['Glass cleaner trigger','750 ml spray',6,'BW'],['Neutral floor cleaner','5 L bottle',2,'BW'],['Floor maintainer','5 L bottle',2,'BW'],['Heavy-duty degreaser','5 L bottle',2,'BW'],['Kitchen sanitiser','5 L bottle',2,'BW'],['Kitchen sanitiser trigger','750 ml spray',6,'BW'],['Washing-up liquid','5 L bottle',2,'BW'],['Dishwasher detergent','5 L bottle',2,'BW'],['Rinse aid','5 L bottle',2,'BW'],['Carpet shampoo','5 L bottle',2,'BW'],['Carpet spotter','750 ml spray',6,'BW'],['Furniture polish','400 ml aerosol',12,'BW'],['Stainless steel cleaner','400 ml aerosol',12,'BW'],['Air freshener (fresh linen)','300 ml aerosol',12,'BW'],['Limescale remover','5 L bottle',2,'BW'],['Pine disinfectant','5 L bottle',2,'BW']],
+PB:[['Toilet roll 2-ply (9 pack)','pack of 9',4,'NP'],['Jumbo toilet roll 2-ply','roll',12,'NP'],['Mini jumbo toilet roll','roll',12,'NP'],['Centrefeed roll blue','roll',6,'NP'],['Centrefeed roll white','roll',6,'NP'],['C-fold hand towels','sleeve of 160',15,'NP'],['Z-fold hand towels','sleeve of 200',15,'NP'],['V-fold hand towels','sleeve of 250',12,'NP'],['Autocut hand towel roll','roll',6,'NP'],['Kitchen roll (2 pack)','pack of 2',12,'NP'],['Industrial wiper roll blue','roll',2,'NP'],['Couch roll','roll',9,'NP'],['Facial tissues','box',24,'NP'],['Toilet seat covers','pack of 250',20,'NP'],['Black bin bags heavy-duty','roll of 20',10,'NP'],['Clear sacks','roll of 20',10,'NP'],['Pedal bin liners white','roll of 50',20,'NP'],['Swing bin liners','roll of 50',10,'NP'],['Orange clinical waste bags','roll of 25',10,'NP'],['Recycling sacks clear','roll of 20',10,'NP'],['Compostable caddy liners','roll of 50',12,'NP'],['Sanitary disposal bags','pack of 50',20,'NP'],['White napkins','pack of 100',20,'NP'],['Paper cups 7oz','sleeve of 50',20,'NP']],
+CM:[['Microfibre cloth blue','pack of 10',10,'BW'],['Microfibre cloth red','pack of 10',10,'BW'],['Microfibre cloth green','pack of 10',10,'BW'],['Microfibre cloth yellow','pack of 10',10,'BW'],['All-purpose cloth blue','pack of 50',10,'BW'],['All-purpose cloth red','pack of 50',10,'BW'],['All-purpose cloth green','pack of 50',10,'BW'],['All-purpose cloth yellow','pack of 50',10,'BW'],['Green scourer pads','pack of 10',10,'BW'],['Sponge scourers','pack of 10',10,'BW'],['Socket mop head red','each',10,'BW'],['Socket mop head blue','each',10,'BW'],['Socket mop head green','each',10,'BW'],['Socket mop head yellow','each',10,'BW'],['Kentucky mop head','each',10,'BW'],['Microfibre flat mop pad','each',10,'BW'],['Aluminium mop handle','each',5,'BW'],['Kentucky mop holder','each',5,'BW'],['Microfibre glass cloth','pack of 5',10,'BW'],['Yellow dusting cloths','pack of 10',10,'BW'],['Steel wool pads','pack of 10',12,'BW'],['Chamois leather','each',10,'BW'],['Floor pad red 17"','box of 5',1,'BW'],['Floor pad black 17"','box of 5',1,'BW']],
+WR:[['Foam hand soap cartridge','1 L cartridge',6,'BW'],['Liquid hand soap','5 L bottle',2,'BW'],['Hand sanitiser gel pump','500 ml pump',12,'BW'],['Hand sanitiser refill','5 L bottle',2,'BW'],['Antibacterial hand wash','5 L bottle',2,'BW'],['Urinal screens','pack of 10',10,'BW'],['Urinal blocks','1 kg tub',6,'BW'],['Toilet rim blocks','pack of 6',12,'BW'],['Auto air freshener refill','refill',12,'BW'],['Sanitary bin liners','pack of 50',10,'NP'],['Manual soap dispenser','each',4,'BW'],['C-fold towel dispenser','each',2,'BW'],['Jumbo toilet roll dispenser','each',2,'BW'],['Auto air freshener unit','each',4,'BW'],['Toilet brush & holder','each',12,'BW'],['Toilet plunger','each',6,'BW'],['Urinal mats','pack of 10',4,'BW'],['Hand cream','1 L cartridge',6,'BW'],['Moisturising hand wash','500 ml pump',12,'BW'],['Baby changing liners','pack of 50',10,'NP'],['Feminine hygiene bag refill','pack of 25',20,'NP'],['Toilet seat sanitiser','400 ml spray',12,'BW'],['Washroom bin 50 L','each',2,'BW'],['Pedal bin 6 L','each',4,'BW']],
+PP:[['Nitrile gloves blue S','box of 100',10,'SH'],['Nitrile gloves blue M','box of 100',10,'SH'],['Nitrile gloves blue L','box of 100',10,'SH'],['Nitrile gloves blue XL','box of 100',10,'SH'],['Vinyl gloves M','box of 100',10,'SH'],['Vinyl gloves L','box of 100',10,'SH'],['Household gloves yellow M','pair',12,'SH'],['Household gloves yellow L','pair',12,'SH'],['Household gloves red M','pair',12,'SH'],['Household gloves red L','pair',12,'SH'],['Disposable aprons white','roll of 200',5,'SH'],['Disposable aprons red','roll of 200',5,'SH'],['Safety glasses','pair',10,'SH'],['FFP2 face masks','box of 20',10,'SH'],['Type IIR face masks','box of 50',10,'SH'],['Hi-vis vest L','each',10,'SH'],['Hi-vis vest XL','each',10,'SH'],['Disposable overshoes','pack of 100',10,'SH'],['Cleaner\'s tabard blue','each',5,'SH'],['Knee pads','pair',5,'SH'],['Heavy-duty gauntlets','pair',12,'SH'],['Hair nets','pack of 100',10,'SH'],['First aid kit refill','kit',4,'SH'],['Disposable sleeve protectors','pack of 100',10,'SH']],
+EQ:[['Mop bucket & wringer 20 L','each',1,'BW'],['Empty spray bottle 750 ml','each',12,'BW'],['Trigger spray heads','each',12,'BW'],['Dustpan & brush set','each',6,'BW'],['Soft broom','each',6,'BW'],['Stiff yard broom','each',6,'BW'],['Window squeegee 35 cm','each',6,'BW'],['Telescopic pole 3 m','each',2,'BW'],['Wet floor sign','each',4,'BW'],['Colour-coded bottle labels','sheet of 20',10,'BW'],['Vacuum bags (tub vac)','pack of 10',10,'BW'],['Vacuum motor filter','each',5,'BW'],['Flat mop frame 40 cm','each',5,'BW'],['Extension lead 10 m','each',4,'BW'],['Cobweb brush','each',6,'BW'],['Litter picker','each',6,'BW'],['Cleaning caddy','each',6,'BW'],['Bucket 10 L red','each',10,'BW'],['Bucket 10 L blue','each',10,'BW'],['Bucket 10 L green','each',10,'BW'],['Bucket 10 L yellow','each',10,'BW'],['Scraper blade','pack of 10',10,'BW'],['Vacuum hose','each',2,'BW'],['Colour-code wall chart','each',5,'BW']]
+};
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const pad=(n,w)=>String(n).padStart(w,'0');
+const uid=()=>Math.random().toString(36).slice(2,9);
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function now(){
+  const p=new URLSearchParams(location.search).get('now')||localStorage.getItem(LS_NOW);
+  if(p){const d=new Date(p.length<=10?p+'T12:00:00':p);if(!isNaN(d))return d}
+  return new Date();
+}
+const monthKey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1,2);
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const monthName=k=>{const[y,m]=k.split('-').map(Number);return MONTHS[m-1]+' '+y};
+const addMonths=(k,n)=>{const[y,m]=k.split('-').map(Number);return monthKey(new Date(y,m-1+n,1))};
+function cutoffOf(k){const[y,m]=k.split('-').map(Number);const dim=new Date(y,m,0).getDate();return new Date(y,m-1,Math.min(state.settings.cutoffDay,dim),23,59,59)}
+const fmtDate=d=>d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+const fmtDT=iso=>{const d=new Date(iso);return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})};
+
+/* ---------- data ---------- */
+let state, me, ui={view:'cleaner',screen:'home',cat:null,q:'',mgrTab:'current',mgrMonth:null,unlocked:false,edit:null,ruleQ:'',photo:null};
+function buildMaster(){
+  const r=rng(42),out=[];
+  CATS.forEach(c=>RAW[c.id].forEach((p,i)=>{
+    const cs=p[2];
+    const min=Math.max(1,Math.round(cs*(0.5+r()*1.5)));
+    const stock=Math.round(min*(0.8+r()*1.7));
+    out.push({code:c.id+pad(i+1,3),name:p[0],unit:p[1],cat:c.id,caseSize:cs,supplier:p[3],min,stock});
+  }));
+  return out;
+}
+function sampleSheetPhoto(){
+  let lines='';for(let i=0;i<12;i++)lines+=`<line x1="20" x2="460" y1="${50+i*25}" y2="${50+i*25}"/>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360"><rect width="480" height="360" fill="#fdfcf5"/><g stroke="#c9d3e6">${lines}</g><text x="24" y="34" font-family="cursive" font-size="20" fill="#1e3a8a">Order - Northgate Med (example)</text><g font-family="cursive" font-size="18" fill="#1e293b"><text x="30" y="70">blue roll x 6</text><text x="30" y="95">bleach big x 4</text><text x="30" y="120">nitrile gloves M  3 box</text><text x="30" y="145">black bags x 5</text><text x="30" y="170">yellow cloths 2 pk</text></g></svg>`;
+  return 'data:image/svg+xml;base64,'+btoa(svg);
+}
+function seed(){
+  const master=buildMaster();
+  const cur=monthKey(now());
+  const s={version:1,settings:{cutoffDay:28,pin:'1234'},sites:SITES0.slice(),suppliers:clone(SUPPLIERS0),master,months:{},current:cur,log:[]};
+  const r=rng(7);
+  const people=['Sue','Gary','Priya','Tom','Wendy','Marek','Lisa','Dev'];
+  const makeOrder=(k,si,day)=>{
+    const items={};const n=6+Math.floor(r()*10);
+    for(let i=0;i<n;i++){const p=master[Math.floor(r()*master.length)];items[p.code]=(items[p.code]||0)+1+Math.floor(r()*4)}
+    const[y,m]=k.split('-').map(Number);
+    return {id:uid(),site:s.sites[si],by:people[si],ts:new Date(y,m-1,day,8+Math.floor(r()*9),Math.floor(r()*60)).toISOString(),items,note:'',photo:null,status:'Submitted'};
+  };
+  for(let back=3;back>=0;back--){
+    const k=addMonths(cur,-back);
+    const mo={key:k,created:new Date().toISOString(),products:clone(master),orders:[]};
+    if(back>0){
+      s.sites.forEach((_,si)=>{if(r()<0.92)mo.orders.push(makeOrder(k,si,3+Math.floor(r()*20)))});
+    }else{
+      const today=Math.max(1,now().getDate());
+      [0,1,2,4,6].forEach(si=>mo.orders.push(makeOrder(k,si,1+Math.floor(r()*today))));
+      const[y,m]=k.split('-').map(Number);
+      mo.orders.push({id:uid(),site:s.sites[5],by:'Marek',ts:new Date(y,m-1,Math.max(1,today-1),17,42).toISOString(),items:{},note:'Photo of our sheet attached, also need a new wet floor sign pls - one got broken',photo:sampleSheetPhoto(),status:'Needs matching'});
+    }
+    s.months[k]=mo;
+  }
+  return s;
+}
+function load(){
+  try{state=JSON.parse(localStorage.getItem(LS))}catch(e){state=null}
+  if(!state||!state.months){state=seed();save()}
+  try{me=JSON.parse(localStorage.getItem(LS_ME))}catch(e){me=null}
+  if(!me)me={site:'',name:'',basket:{}};
+}
+function save(){localStorage.setItem(LS,JSON.stringify(state))}
+function saveMe(){localStorage.setItem(LS_ME,JSON.stringify(me))}
+const cur=()=>state.months[state.current];
+const prodMap=k=>{const m={};(state.months[k]||cur()).products.forEach(p=>m[p.code]=p);return m};
+const catOf=id=>CATS.find(c=>c.id===id);
+const supOf=id=>state.suppliers.find(s=>s.id===id)||{id,name:id,email:''};
+function createMonth(k){
+  if(state.months[k])return;
+  // master tab is the template: fresh copy, empty orders
+  state.months[k]={key:k,created:now().toISOString(),products:clone(state.master),orders:[]};
+}
+function rollover(){
+  const k=monthKey(now());
+  if(k>state.current){createMonth(k);const old=state.current;state.current=k;ui.mgrMonth=k;state.log.push({ts:new Date().toISOString(),msg:'Auto rollover '+old+' -> '+k});save();me.basket={};saveMe();return true}
+  return false;
+}
+function isOpen(){return now()<=cutoffOf(state.current)}
+function countdown(){
+  const ms=cutoffOf(state.current)-now();
+  if(ms<=0)return'closed';
+  const d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);
+  if(d>0)return d+(d===1?' day ':' days ')+h+(h===1?' hr':' hrs')+' left';
+  return h+' hrs '+m+' mins left';
+}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+const demoStrip='<div class="demo-strip noprint">Prototype · <b>example data only</b> — every product, site, supplier and order here is made up</div>';
+/* =================== CLEANER VIEW =================== */
+function render(){
+  rollover();
+  if(ui.view==='manager')return renderManager();
+  const app=$('#app');
+  if(!me.site||!me.name||ui.screen==='who'){app.innerHTML=demoStrip+whoScreen();return}
+  const open=isOpen(),k=state.current,co=cutoffOf(k);
+  const ms=co-now();
+  const bcls=!open?'closed':(ms<3*864e5?'soon':'');
+  app.innerHTML=demoStrip+`
+  <div class="topbar"><h1>Supplies Order<span class="sub">${esc(me.site)} · ${esc(me.name)} <a href="#" data-a="who" style="color:#fff;opacity:.85">change</a></span></h1><button class="linkbtn" data-a="mgr" id="mgrlink">Manager</button></div>
+  <div class="wrap">
+   <div class="banner ${bcls}" id="banner">${ICON.cal}<div><b>${monthName(k)} order</b>${open?'Cut-off '+fmtDate(co)+', 11:59pm':'Closed on '+fmtDate(co)}</div><div class="cd" id="cd">${open?countdown():'Closed'}</div></div>
+   ${open?`<div class="searchbar"><div class="search">${ICON.search}<input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Search all ${cur().products.length} products…" value="${esc(ui.q)}"><button class="clear" data-a="clearq" ${ui.q?'':'hidden'} aria-label="Clear">×</button></div></div>
+   <div id="cc"></div>`:lockedScreen()}
+  </div>
+  ${open?`<div class="basketbar" id="bbar"></div>`:''}`;
+  if(open){renderContent();updateBar()}
+}
+function whoScreen(){
+  return `<div class="topbar"><h1>Supplies Order<span class="sub">Who's ordering?</span></h1><button class="linkbtn" data-a="mgr" id="mgrlink">Manager</button></div>
+  <div class="wrap" style="padding-top:16px"><div class="card"><h2 style="margin:0 0 4px;font-size:20px">Hi! Which site are you ordering for?</h2><p class="note" style="margin:0 0 10px">We'll remember this on your phone.</p>
+  <div class="sitepick">${state.sites.map(s=>`<button data-a="pick" data-site="${esc(s)}" class="${me.site===s?'on':''}">${esc(s)}</button>`).join('')}</div>
+  <label class="field"><span>Your first name</span><input id="nm" value="${esc(me.name)}" autocomplete="given-name" placeholder="e.g. Sue"></label>
+  <button class="primary" data-a="saveme" id="saveme">Start ordering</button></div></div>`;
+}
+function lockedScreen(){
+  const next=addMonths(state.current,1);
+  return `<div class="card locked" id="locked">${ICON.lock}<h2 style="margin:8px 0 6px">Ordering for ${monthName(state.current)} has closed</h2>
+  <p>Thanks — everything sent before the cut-off is being put together now.</p>
+  <p class="note">The ${monthName(next)} order opens on 1 ${MONTHS[Number(next.split('-')[1])-1]}. If something is urgent, message your manager directly.</p></div>`;
+}
+function prodRow(p,showCat){
+  const q=me.basket[p.code]||0;
+  return `<div class="prod ${q?'has':''}" data-row="${p.code}"><div class="info"><div class="nm">${esc(p.name)}</div><div class="meta">${showCat?`<span class="tag">${esc(catOf(p.cat).name)}</span>`:''}${esc(p.unit)} · ${p.code}</div></div>
+  <div class="step"><button data-a="dec" data-c="${p.code}" aria-label="Less">−</button><span class="q" data-q="${p.code}">${q}</span><button class="plus" data-a="inc" data-c="${p.code}" aria-label="More">+</button></div></div>`;
+}
+function searchHits(list,q){
+  const words=q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  return list.filter(p=>{const h=(p.name+' '+p.code+' '+p.unit+' '+catOf(p.cat).name).toLowerCase();return words.every(w=>h.includes(w))});
+}
+function renderContent(){
+  const cc=$('#cc');if(!cc)return;
+  const prods=cur().products;
+  if(ui.q.trim()){
+    const hits=searchHits(prods,ui.q);
+    cc.innerHTML=`<div class="sectionhead"><h2 style="font-size:16px;color:var(--muted)" id="hitcount">${hits.length} match${hits.length===1?'':'es'} for “${esc(ui.q.trim())}”</h2></div><div class="plist" id="hits">${hits.map(p=>prodRow(p,true)).join('')||'<div class="empty">Nothing matches — try fewer letters, or send a photo / note instead.</div>'}</div>`;
+    return;
+  }
+  if(ui.screen==='cat'){
+    const c=catOf(ui.cat);
+    cc.innerHTML=`<div class="sectionhead"><button class="back" data-a="home" aria-label="Back">${ICON.back}</button><h2>${esc(c.name)}</h2></div><div class="plist">${prods.filter(p=>p.cat===c.id).map(p=>prodRow(p,false)).join('')}</div>`;
+  }else if(ui.screen==='basket'){
+    const pm=prodMap(state.current);
+    const items=Object.keys(me.basket).filter(c=>me.basket[c]>0&&pm[c]);
+    cc.innerHTML=`<div class="sectionhead"><button class="back" data-a="home" aria-label="Back">${ICON.back}</button><h2>Your basket</h2></div>
+    ${items.length?`<div class="plist">${items.map(c=>prodRow(pm[c],true)).join('')}</div>
+    <label class="field"><span>Anything else? (optional note)</span><textarea id="bnote" placeholder="e.g. need the yellow gloves in large this time"></textarea></label>
+    <button class="primary" data-a="submit" id="submitbtn">Send order for ${esc(me.site)}</button>
+    <p class="note" style="text-align:center">Set a number to 0 to remove it. You can send another order before the cut-off if you forget something.</p>`:'<div class="empty">Your basket is empty. Tap a category or search to add items.</div>'}`;
+  }else if(ui.screen==='photo'){
+    cc.innerHTML=`<div class="sectionhead"><button class="back" data-a="home" aria-label="Back">${ICON.back}</button><h2>Photo or note</h2></div>
+    <div class="card"><p style="margin-top:0">Snap your paper order sheet or just type what you need. Your manager will match it to the product list.</p>
+    <label class="field"><span>Photo of order sheet</span><input type="file" id="pfile" accept="image/*" capture="environment"></label>
+    ${ui.photo?`<img class="photoprev" id="pprev" src="${ui.photo}" alt="Order sheet photo">`:''}
+    <label class="field"><span>Or type what you need</span><textarea id="pnote" placeholder="e.g. 6 blue roll, 4 big bleach, 3 boxes medium gloves"></textarea></label>
+    <button class="primary" data-a="sendphoto" id="sendphoto">Send to manager</button></div>`;
+  }else if(ui.screen==='done'){
+    cc.innerHTML=`<div class="card locked" id="done">${ICON.PP}<h2 style="margin:8px 0">Order sent — thank you!</h2><p>${esc(ui.doneMsg||'')}</p><button class="primary" data-a="home">Back to start</button></div>`;
+  }else{
+    cc.innerHTML=`<div class="grid6">${CATS.map(c=>`<button class="catbtn" style="background:${c.color}" data-a="cat" data-cat="${c.id}">${ICON[c.id]}<div><div class="n">${esc(c.name)}</div><div class="c">${prods.filter(p=>p.cat===c.id).length} items</div></div></button>`).join('')}</div>
+    <div class="altrow"><button class="bigbtn" data-a="photo" id="photobtn">${ICON.cam}<span><b>Upload photo of order sheet / type a note</b><br><span class="note">If that's quicker than tapping through</span></span></button></div>`;
+  }
+}
+function updateBar(){
+  const b=$('#bbar');if(!b)return;
+  const lines=Object.values(me.basket).filter(q=>q>0).length;
+  const units=Object.values(me.basket).reduce((a,q)=>a+(q>0?q:0),0);
+  if(ui.screen==='basket'||ui.screen==='done'||ui.screen==='photo'){b.innerHTML='';return}
+  b.innerHTML=`<button data-a="basket" id="basketbtn" ${lines?'':'disabled'}>${ICON.bag}<span>Basket</span><span class="cnt" id="bcount">${lines}</span><span class="go">${lines?units+' items · Review ›':'Empty'}</span></button>`;
+}
+function setQty(code,q){
+  q=Math.max(0,Math.min(999,q));
+  if(q)me.basket[code]=q;else delete me.basket[code];
+  saveMe();
+  document.querySelectorAll(`[data-q="${code}"]`).forEach(e=>e.textContent=q);
+  document.querySelectorAll(`[data-row="${code}"]`).forEach(e=>e.classList.toggle('has',q>0));
+  updateBar();
+}
+function submitBasket(){
+  if(!isOpen()){toast('Sorry — ordering has closed');render();return}
+  const items={};Object.keys(me.basket).forEach(c=>{if(me.basket[c]>0)items[c]=me.basket[c]});
+  if(!Object.keys(items).length){toast('Your basket is empty');return}
+  const note=($('#bnote')||{}).value||'';
+  cur().orders.push({id:uid(),site:me.site,by:me.name,ts:now().toISOString(),items,note,photo:null,status:'Submitted'});
+  save();
+  const n=Object.keys(items).length;
+  me.basket={};saveMe();
+  ui.doneMsg=`${n} line${n===1?'':'s'} sent for ${me.site}. You can add more until the cut-off (${countdown()}).`;
+  ui.screen='done';ui.q='';render();
+}
+function resizeImage(file){
+  return new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const max=1100,sc=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',0.72))};img.onerror=()=>res(fr.result);img.src=fr.result};fr.readAsDataURL(file)});
+}
+function sendPhoto(){
+  if(!isOpen()){toast('Sorry — ordering has closed');render();return}
+  const note=$('#pnote').value.trim();
+  if(!note&&!ui.photo){toast('Add a photo or type a note first');return}
+  cur().orders.push({id:uid(),site:me.site,by:me.name,ts:now().toISOString(),items:{},note,photo:ui.photo,status:'Needs matching'});
+  try{save()}catch(e){cur().orders.pop();toast('Photo too large to store in this demo — try a smaller one');return}
+  ui.photo=null;ui.doneMsg='Your manager will match it to the product list (status: needs matching).';ui.screen='done';render();
+}
+/* =================== MANAGER VIEW =================== */
+const TABS=[['current','Current month'],['bymonth','Orders by month'],['edit','Add / edit order'],['compile','Compile'],['supplier','Supplier order'],['rules','Stock rules'],['settings','Settings']];
+function renderManager(){
+  const app=$('#app');
+  if(!ui.unlocked){
+    app.innerHTML=demoStrip+`<div class="mgr"><div class="topbar"><h1>Manager</h1><button class="linkbtn" data-a="cleaner">← Cleaner view</button></div>
+    <div class="pinbox"><h2 style="margin-top:0">Enter manager PIN</h2><input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"><p class="note">Demo PIN: <b>1234</b></p><button class="primary" data-a="unlock" id="unlockbtn">Unlock</button><p id="pinerr" style="color:var(--bad)"></p></div></div>`;
+    setTimeout(()=>$('#pin')&&$('#pin').focus(),0);return;
+  }
+  if(!ui.mgrMonth||!state.months[ui.mgrMonth])ui.mgrMonth=state.current;
+  const body={current:mCurrent,bymonth:mByMonth,edit:mEdit,compile:mCompile,supplier:mSupplier,rules:mRules,settings:mSettings}[ui.mgrTab]();
+  app.innerHTML=demoStrip+`<div class="mgr"><div class="topbar noprint"><h1>Supplies Order — Manager<span class="sub">Current month: ${monthName(state.current)} · ${isOpen()?'open, cut-off '+fmtDate(cutoffOf(state.current)):'closed (cut-off passed)'}</span></h1><button class="linkbtn" data-a="lock">Lock</button><button class="linkbtn" data-a="cleaner">Cleaner view</button></div>
+  <div class="mgrbody"><nav class="side noprint"><div class="grp">Orders</div>${TABS.slice(0,3).map(tabBtn).join('')}<div class="grp">Month end</div>${TABS.slice(3,5).map(tabBtn).join('')}<div class="grp">Setup</div>${TABS.slice(5).map(tabBtn).join('')}</nav>
+  <main class="main" id="main">${body}</main></div></div>`;
+  if(ui.mgrTab==='edit')renderEditResults();
+}
+const tabBtn=t=>`<button data-a="tab" data-tab="${t[0]}" class="${ui.mgrTab===t[0]?'on':''}" id="tab-${t[0]}">${t[1]}</button>`;
+const monthOpts=sel=>Object.keys(state.months).sort().reverse().map(k=>`<option value="${k}" ${k===sel?'selected':''}>${monthName(k)}${k===state.current?' (current)':' (closed)'}</option>`).join('');
+const unitsOf=o=>Object.values(o.items).reduce((a,b)=>a+b,0);
+const statusPill=s=>`<span class="pill ${s==='Needs matching'?'warn':s==='Added by manager'?'grey':''}">${esc(s)}</span>`;
+function ordersTable(mk){
+  const os=state.months[mk].orders.slice().sort((a,b)=>a.site.localeCompare(b.site)||a.ts.localeCompare(b.ts));
+  if(!os.length)return '<div class="pad note">No orders yet.</div>';
+  return `<div class="tblwrap"><table class="tbl"><thead><tr><th>Site</th><th>By</th><th>Sent</th><th class="n">Lines</th><th class="n">Units</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody>${os.map(o=>`<tr><td>${esc(o.site)}</td><td>${esc(o.by)}</td><td>${fmtDT(o.ts)}</td><td class="n">${Object.keys(o.items).length}</td><td class="n">${unitsOf(o)}</td><td>${statusPill(o.status)}${o.photo?' <span class="pill grey">photo</span>':''}</td><td style="max-width:260px">${esc(o.note)}</td><td><button class="btn sm" data-a="editorder" data-m="${mk}" data-id="${o.id}">Open</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+function mCurrent(){
+  const m=cur(),os=m.orders;
+  const ordered=new Set(os.map(o=>o.site));
+  const missing=state.sites.filter(s=>!ordered.has(s));
+  const nm=os.filter(o=>o.status==='Needs matching');
+  return `<div class="formtitle"><h2>${monthName(m.key)}</h2>${isOpen()?`<span class="pill">Open · ${countdown()}</span>`:'<span class="pill bad">Cut-off passed — ready to compile</span>'}<span class="sp"></span><button class="btn pri" data-a="newfor" data-m="${m.key}">+ Add order</button></div>
+  <div class="kpis"><div class="kpi"><div class="v" id="k-orders">${os.length}</div><div class="l">orders received</div></div><div class="kpi"><div class="v">${ordered.size}/${state.sites.length}</div><div class="l">sites ordered</div></div><div class="kpi"><div class="v" id="k-match">${nm.length}</div><div class="l">need photo matching</div></div><div class="kpi"><div class="v">${fmtDate(cutoffOf(m.key))}</div><div class="l">cut-off date</div></div></div>
+  <div class="cols2"><div class="panel"><h3>Not ordered yet <span class="pill ${missing.length?'warn':''}">${missing.length}</span></h3><div class="pad" id="missing">${missing.length?`<div class="chips">${missing.map(s=>`<span class="pill warn">${esc(s)}</span>`).join('')}</div><p class="note">In the real version a Grok Bot could remind you about these a few days before the cut-off.</p>`:'<span class="note">Every site has ordered.</span>'}</div></div>
+  <div class="panel"><h3>Needs photo matching <span class="pill ${nm.length?'warn':''}">${nm.length}</span></h3>${nm.length?nm.map(o=>`<div class="match">${o.photo?`<img src="${o.photo}" alt="order sheet">`:''}<div style="flex:1"><b>${esc(o.site)}</b> · ${esc(o.by)} · ${fmtDT(o.ts)}<div class="note">${esc(o.note)||'(photo only)'}</div><button class="btn sm grn" style="margin-top:6px" data-a="editorder" data-m="${m.key}" data-id="${o.id}">Match to products</button></div></div>`).join(''):'<div class="pad note">Nothing waiting.</div>'}</div></div>
+  <div class="panel"><h3>All orders by site</h3>${ordersTable(m.key)}</div>`;
+}
+function mByMonth(){
+  const mk=ui.mgrMonth,m=state.months[mk];
+  return `<div class="formtitle"><h2>Orders by month</h2></div>
+  <div class="toolbar"><label>Month <select data-a="mmonth" id="mmonth">${monthOpts(mk)}</select></label>${mk===state.current?'<span class="pill">current month</span>':'<span class="pill grey">closed · read-only for cleaners</span>'}<span class="note">${m.orders.length} orders · ${new Set(m.orders.map(o=>o.site)).size} sites</span></div>
+  <div class="panel"><h3>${monthName(mk)}</h3>${ordersTable(mk)}</div>`;
+}
+function startEdit(mk,id,site){
+  const m=state.months[mk];const o=id&&m.orders.find(x=>x.id===id);
+  ui.edit={mk,id:o?o.id:null,site:o?o.site:(site||state.sites[0]),items:o?clone(o.items):{},note:o?o.note:'',by:o?o.by:'Manager',pq:''};
+  ui.mgrTab='edit';
+}
+function mEdit(){
+  if(!ui.edit)startEdit(state.current,null);
+  const e=ui.edit,m=state.months[e.mk],pm=prodMap(e.mk);
+  const o=e.id&&m.orders.find(x=>x.id===e.id);
+  const siteOrders=m.orders.filter(x=>x.site===e.site);
+  const closed=e.mk!==state.current||!isOpen();
+  const lines=Object.keys(e.items);
+  return `<div class="formtitle"><h2>${o?'Edit order':'Add order'}</h2>${o?statusPill(o.status):'<span class="pill grey">new</span>'}${closed?'<span class="pill warn">after cut-off — manager adjustment</span>':''}</div>
+  <div class="toolbar"><label>Month <select data-a="emonth" id="emonth">${monthOpts(e.mk)}</select></label>
+  <label>Site <select data-a="esite" id="esite">${state.sites.map(s=>`<option ${s===e.site?'selected':''}>${esc(s)}</option>`).join('')}</select></label>
+  <label>Order <select data-a="eorder" id="eorder"><option value="">+ New order</option>${siteOrders.map(x=>`<option value="${x.id}" ${x.id===e.id?'selected':''}>${fmtDT(x.ts)} · ${esc(x.by)} · ${x.status}</option>`).join('')}</select></label></div>
+  <div class="cols2"><div class="panel"><h3>Order lines <span class="pill">${lines.length}</span></h3>
+  <div class="tblwrap"><table class="tbl" id="elines"><thead><tr><th>Code</th><th>Description</th><th>Unit</th><th class="n">Qty</th><th></th></tr></thead><tbody>${lines.length?lines.map(c=>`<tr><td>${c}</td><td>${esc(pm[c]?pm[c].name:'?')}</td><td>${esc(pm[c]?pm[c].unit:'')}</td><td class="n"><input class="num" type="number" min="0" data-a="eqty" data-c="${c}" value="${esc(e.items[c])}"></td><td><button class="btn sm" data-a="edel" data-c="${c}">Remove</button></td></tr>`).join(''):'<tr><td colspan="5" class="note">No lines yet — search for a product to add.</td></tr>'}</tbody></table></div>
+  <div class="pad"><label class="field" style="margin:0"><span>Add product (type to search by name or code)</span><input id="epq" placeholder="e.g. bleach, PB004, gloves L" autocomplete="off" value="${esc(e.pq)}"></label><div id="eres"></div></div></div>
+  <div><div class="panel"><h3>Details</h3><div class="pad"><label class="field"><span>Ordered by</span><input id="eby" value="${esc(e.by)}"></label><label class="field"><span>Note</span><textarea id="enote" style="min-height:70px">${esc(e.note)}</textarea></label>
+  ${o&&o.photo?`<p class="note" style="margin:0">Photo from cleaner:</p><img src="${o.photo}" style="max-width:100%;border-radius:8px;border:1px solid #d7e0e6" alt="order sheet">`:''}</div></div>
+  <div class="toolbar"><button class="btn grn" data-a="esave" id="esave">Save order</button><button class="btn" data-a="tab" data-tab="current">Cancel</button></div></div></div>`;
+}
+function renderEditResults(){
+  const box=$('#eres');if(!box)return;
+  if(!ui.edit.pq.trim()){box.innerHTML='';return}
+  const hits=searchHits(state.months[ui.edit.mk].products,ui.edit.pq).slice(0,12);
+  box.innerHTML=`<div class="results">${hits.map(p=>`<button data-a="eadd" data-c="${p.code}"><b>${p.code}</b> ${esc(p.name)} <span class="note">· ${esc(p.unit)}</span></button>`).join('')||'<div class="pad note">No match</div>'}</div>`;
+}
+function saveEdit(){
+  keepEditFields();
+  const e=ui.edit,m=state.months[e.mk];
+  const items={};Object.keys(e.items).forEach(c=>{const q=Math.max(0,parseInt(e.items[c],10)||0);if(q)items[c]=q});
+  let o=e.id&&m.orders.find(x=>x.id===e.id);
+  if(o){
+    o.items=items;o.note=e.note;o.by=e.by||'Manager';o.site=e.site;o.edited=now().toISOString();
+    if(o.status==='Needs matching'&&Object.keys(items).length)o.status='Matched';
+  }else{
+    if(!Object.keys(items).length){toast('Add at least one line');return}
+    o={id:uid(),site:e.site,by:e.by||'Manager',ts:now().toISOString(),items,note:e.note,photo:null,status:'Added by manager'};m.orders.push(o);e.id=o.id;
+  }
+  e.items=clone(items);
+  state.log.push({ts:new Date().toISOString(),msg:'Saved order '+o.id+' '+o.site+' '+e.mk});
+  save();toast('Order saved for '+o.site+' ('+monthName(e.mk)+')');render();
+}
+/* ---- compile: order qty = max(0, requested + min stock - on hand), rounded UP to whole cases ---- */
+function compile(mk){
+  const m=state.months[mk],tot={},bySite={};
+  m.orders.forEach(o=>Object.entries(o.items).forEach(([c,q])=>{tot[c]=(tot[c]||0)+q;(bySite[o.site]=bySite[o.site]||{})[c]=(bySite[o.site][c]||0)+q}));
+  const rows=m.products.map(p=>{
+    const req=tot[p.code]||0;
+    const need=Math.max(0,req+p.min-p.stock);
+    const cases=need>0?Math.ceil(need/p.caseSize):0;
+    return {p,req,need,cases,units:cases*p.caseSize};
+  }).filter(r=>r.req>0||r.cases>0);
+  return {rows,bySite,unmatched:m.orders.filter(o=>o.status==='Needs matching').length};
+}
+function mCompile(){
+  const mk=ui.mgrMonth,c=compile(mk);
+  const tc=c.rows.reduce((a,r)=>a+r.cases,0);
+  return `<div class="formtitle"><h2>Compile</h2></div>
+  <div class="toolbar"><label>Month <select data-a="mmonth">${monthOpts(mk)}</select></label><span class="note">Order qty = max(0, requested + min stock − on hand), rounded <b>up</b> to whole cases.</span></div>
+  ${c.unmatched?`<div class="alert">${c.unmatched} photo/note order${c.unmatched>1?'s are':' is'} not matched yet, so ${c.unmatched>1?'they are':'it is'} not in these totals. <a href="#" data-a="tab" data-tab="current">Match now</a></div>`:''}
+  ${mk===state.current&&isOpen()?'<div class="alert info">Cut-off hasn\'t passed yet — this is a live preview and will change as orders come in.</div>':''}
+  <div class="kpis"><div class="kpi"><div class="v">${c.rows.filter(r=>r.req).length}</div><div class="l">products requested</div></div><div class="kpi"><div class="v">${c.rows.filter(r=>r.cases).length}</div><div class="l">products to order</div></div><div class="kpi"><div class="v" id="k-cases">${tc}</div><div class="l">cases in total</div></div></div>
+  <div class="panel"><h3>Totals per item</h3><div class="tblwrap"><table class="tbl" id="ctbl"><thead><tr><th>Code</th><th>Description</th><th>Unit</th><th class="n">Requested</th><th class="n">Min stock</th><th class="n">On hand</th><th class="n">Needed</th><th class="n">Case size</th><th class="n">Cases</th><th class="n">Units ordered</th><th>Supplier</th></tr></thead><tbody>${c.rows.map(r=>`<tr data-code="${r.p.code}"><td>${r.p.code}</td><td>${esc(r.p.name)}</td><td>${esc(r.p.unit)}</td><td class="n">${r.req}</td><td class="n">${r.p.min}</td><td class="n">${r.p.stock}</td><td class="n">${r.need}</td><td class="n">${r.p.caseSize}</td><td class="n"><b>${r.cases}</b></td><td class="n">${r.units}</td><td class="nw">${esc(supOf(r.p.supplier).name.replace(' (example)',''))}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="panel"><h3>Picking lists per site <span class="sp"></span><button class="btn sm noprint" data-a="printpick">Print picking lists</button></h3><div class="picks" id="picks">${pickHTML(mk,c)}</div></div>`;
+}
+function pickHTML(mk,c){
+  const pm=prodMap(mk);
+  return Object.keys(c.bySite).sort().map(s=>`<div class="pick"><h4>${esc(s)}</h4><ul>${Object.entries(c.bySite[s]).sort().map(([code,q])=>`<li>${q} × ${esc(pm[code]?pm[code].name:code)} <span class="note">(${esc(pm[code]?pm[code].unit:'')})</span></li>`).join('')}</ul></div>`).join('')||'<div class="note">No orders yet.</div>';
+}
+function supplierGroups(mk){
+  const c=compile(mk),g={};
+  c.rows.filter(r=>r.cases>0).forEach(r=>{(g[r.p.supplier]=g[r.p.supplier]||[]).push(r)});
+  return g;
+}
+const unitText=p=>p.unit==='each'?'case of '+p.caseSize:'case of '+p.caseSize+' × '+p.unit;
+function mSupplier(){
+  const mk=ui.mgrMonth,g=supplierGroups(mk);
+  return `<div class="formtitle"><h2>Supplier order</h2><span class="sp"></span><button class="btn" data-a="csv" id="csvbtn">Download CSV</button><button class="btn" data-a="print" id="printbtn">Printable page</button></div>
+  <div class="toolbar"><label>Month <select data-a="mmonth">${monthOpts(mk)}</select></label><span class="note">Agreed format: Supplier · Code · Description · Cases · Unit. “Send to supplier” opens an email draft in your mail app — nothing is sent until you press send there.</span></div>
+  ${Object.keys(g).sort().map(sid=>{const s=supOf(sid);return `<div class="panel supgrp"><h3>${esc(s.name)} <span class="em">${esc(s.email)} · acct ${esc(s.account||'')} · ${g[sid].reduce((a,r)=>a+r.cases,0)} cases</span><span class="sp"></span><a class="btn sm grn" id="send-${sid}" href="${esc(mailto(mk,sid,g[sid]))}">Send to supplier…</a></h3>
+  <div class="tblwrap"><table class="tbl"><thead><tr><th>Supplier</th><th>Code</th><th>Description</th><th class="n">Cases</th><th>Unit</th></tr></thead><tbody>${g[sid].map(r=>`<tr><td>${esc(s.name)}</td><td>${r.p.code}</td><td>${esc(r.p.name)}</td><td class="n">${r.cases}</td><td>${esc(unitText(r.p))}</td></tr>`).join('')}</tbody></table></div></div>`}).join('')||'<div class="note">Nothing to order for this month.</div>'}`;
+}
+function mailto(mk,sid,rows){
+  const s=supOf(sid);
+  const body=`Hello,\n\nPlease supply the following for our ${monthName(mk)} order (account ${s.account||''}).\n\nCode | Description | Cases | Unit\n`+rows.map(r=>`${r.p.code} | ${r.p.name} | ${r.cases} | ${unitText(r.p)}`).join('\n')+`\n\nTotal cases: ${rows.reduce((a,r)=>a+r.cases,0)}\n\nMany thanks`;
+  return 'mailto:'+s.email+'?subject='+encodeURIComponent('Order '+monthName(mk)+' - account '+(s.account||''))+'&body='+encodeURIComponent(body);
+}
+function csvFor(mk){
+  const g=supplierGroups(mk),q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const lines=[['Supplier','Code','Description','Cases','Unit'].join(',')];
+  Object.keys(g).sort().forEach(sid=>g[sid].forEach(r=>lines.push([q(supOf(sid).name),q(r.p.code),q(r.p.name),r.cases,q(unitText(r.p))].join(','))));
+  return lines.join('\r\n')+'\r\n';
+}
+function downloadCSV(){
+  const mk=ui.mgrMonth,blob=new Blob(['\ufeff'+csvFor(mk)],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='supplier-order-'+mk+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}
+function printDoc(title,inner){
+  const w=window.open('','_blank');
+  if(!w){toast('Pop-up blocked — allow pop-ups to print');return}
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font:13px system-ui,Arial,sans-serif;margin:24px;color:#111}h1{font-size:20px}h2{font-size:15px;margin:18px 0 6px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:5px 7px;text-align:left}td.n{text-align:right}.pick{break-inside:avoid;margin-bottom:12px}.note{color:#555}.demo{color:#92400e;font-size:12px}</style></head><body><p class="demo">Prototype — example data only</p><h1>${esc(title)}</h1>${inner}<script>setTimeout(function(){window.print()},300)<\/script></body></html>`;
+  w.document.open();w.document.write(html);w.document.close();
+}
+function printSupplier(){
+  const mk=ui.mgrMonth,g=supplierGroups(mk);
+  printDoc('Supplier order — '+monthName(mk),Object.keys(g).sort().map(sid=>{const s=supOf(sid);return `<h2>${esc(s.name)} — acct ${esc(s.account||'')}</h2><table><tr><th>Supplier</th><th>Code</th><th>Description</th><th>Cases</th><th>Unit</th></tr>${g[sid].map(r=>`<tr><td>${esc(s.name)}</td><td>${r.p.code}</td><td>${esc(r.p.name)}</td><td class="n">${r.cases}</td><td>${esc(unitText(r.p))}</td></tr>`).join('')}</table>`}).join(''));
+}
+function mRules(){
+  return `<div class="formtitle"><h2>Stock rules</h2><span class="pill">master template + ${monthName(state.current)}</span></div>
+  <div class="toolbar"><label>Filter <input id="rq" placeholder="name or code" value="${esc(ui.ruleQ)}" autocomplete="off"></label><span class="note">Update “On hand” after each stock take. Changes save automatically. Closed months keep the rules they were compiled with.</span></div>
+  <div class="panel"><div class="tblwrap" style="max-height:640px"><table class="tbl" id="rtbl"><thead><tr><th>Code</th><th>Product</th><th>Unit</th><th class="n">Min level</th><th class="n">Case size</th><th>Supplier</th><th class="n">On hand</th></tr></thead><tbody id="rbody">${rulesRows()}</tbody></table></div></div>`;
+}
+function rulesRows(){
+  const q=ui.ruleQ.trim().toLowerCase();
+  return state.master.filter(p=>!q||(p.name+' '+p.code).toLowerCase().includes(q)).map(p=>`<tr><td>${p.code}</td><td>${esc(p.name)}</td><td>${esc(p.unit)}</td><td class="n"><input class="num" type="number" min="0" data-a="rule" data-f="min" data-c="${p.code}" value="${p.min}"></td><td class="n"><input class="num" type="number" min="1" data-a="rule" data-f="caseSize" data-c="${p.code}" value="${p.caseSize}"></td><td><select data-a="rule" data-f="supplier" data-c="${p.code}">${state.suppliers.map(s=>`<option value="${s.id}" ${s.id===p.supplier?'selected':''}>${esc(s.name)}</option>`).join('')}</select></td><td class="n"><input class="num" type="number" min="0" data-a="rule" data-f="stock" data-c="${p.code}" value="${p.stock}"></td></tr>`).join('');
+}
+function setRule(code,f,v){
+  if(f!=='supplier'){v=parseInt(v,10);if(isNaN(v)||v<0)v=0;if(f==='caseSize'&&v<1)v=1}
+  [state.master,cur().products].forEach(list=>{const p=list.find(x=>x.code===code);if(p)p[f]=v});
+  save();
+}
+function mSettings(){
+  const nowD=now(),demo=localStorage.getItem(LS_NOW)||new URLSearchParams(location.search).get('now');
+  return `<div class="formtitle"><h2>Settings</h2></div>
+  <div class="cols2"><div class="panel"><h3>Monthly cycle</h3><div class="pad">
+   <label class="field"><span>Cut-off day of month (orders close at 11:59pm; short months use their last day)</span><input id="cutday" type="number" min="1" max="31" value="${state.settings.cutoffDay}" style="max-width:120px"></label>
+   <button class="btn pri" data-a="savecut" id="savecut">Save cut-off</button>
+   <hr style="border:0;border-top:1px solid #e3e9ee;margin:16px 0">
+   <p style="margin-top:0"><b>Start new month</b> copies the master product template into a fresh month with no orders. ${monthName(state.current)} becomes read-only for cleaners (you can still adjust it here). This also happens automatically on the 1st.</p>
+   <button class="btn grn" data-a="newmonth" id="newmonth">Start ${monthName(addMonths(state.current,1))}</button></div></div>
+  <div class="panel"><h3>Demo controls (prototype only)</h3><div class="pad">
+   <p class="note" style="margin-top:0">Pretend it's a different day to try the cut-off lock and the automatic monthly rollover.</p>
+   <label class="field"><span>Demo date (today is ${nowD.toLocaleDateString('en-GB')}${demo?' — simulated':''})</span><input id="demodate" type="date" value="${demo?esc(demo.slice(0,10)):''}" style="max-width:200px"></label>
+   <div class="toolbar"><button class="btn" data-a="setdemo" id="setdemo">Use this date</button><button class="btn" data-a="cleardemo">Back to real date</button></div>
+   <hr style="border:0;border-top:1px solid #e3e9ee;margin:12px 0">
+   <button class="btn" data-a="reset" id="resetbtn">Reset all example data</button>
+   <p class="note">Sites: ${state.sites.map(esc).join(', ')}.<br>Suppliers: ${state.suppliers.map(s=>esc(s.name)+' &lt;'+esc(s.email)+'&gt;').join(', ')}.</p></div></div></div>`;
+}
+/* =================== events =================== */
+function keepEditFields(){const b=$('#eby'),n=$('#enote');if(b)ui.edit.by=b.value;if(n)ui.edit.note=n.value;document.querySelectorAll('[data-a="eqty"]').forEach(i=>ui.edit.items[i.dataset.c]=i.value)}
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest('[data-a]');if(!t)return;
+  if(t.tagName==='SELECT'||t.tagName==='INPUT'||t.tagName==='TEXTAREA')return;
+  const a=t.dataset.a;
+  if(t.tagName==='A'&&!(t.getAttribute('href')||'').startsWith('mailto:'))ev.preventDefault();
+  switch(a){
+   case 'who':ui.screen='who';render();break;
+   case 'pick':me.site=t.dataset.site;document.querySelectorAll('.sitepick button').forEach(b=>b.classList.toggle('on',b===t));break;
+   case 'saveme':{const n=$('#nm').value.trim();if(!me.site){toast('Pick your site');return}if(!n){toast('Add your name');return}me.name=n;saveMe();ui.screen='home';render();window.scrollTo(0,0);break}
+   case 'cat':ui.cat=t.dataset.cat;ui.screen='cat';renderContent();updateBar();window.scrollTo(0,0);break;
+   case 'home':ui.screen='home';ui.q='';render();window.scrollTo(0,0);break;
+   case 'clearq':ui.q='';$('#q').value='';t.hidden=true;renderContent();$('#q').focus();break;
+   case 'inc':setQty(t.dataset.c,(me.basket[t.dataset.c]||0)+1);break;
+   case 'dec':setQty(t.dataset.c,(me.basket[t.dataset.c]||0)-1);break;
+   case 'basket':ui.screen='basket';ui.q='';render();window.scrollTo(0,0);break;
+   case 'submit':submitBasket();break;
+   case 'photo':ui.screen='photo';ui.photo=null;renderContent();updateBar();break;
+   case 'sendphoto':sendPhoto();break;
+   case 'mgr':ui.view='manager';render();break;
+   case 'cleaner':ui.view='cleaner';ui.screen='home';render();break;
+   case 'lock':ui.unlocked=false;render();break;
+   case 'unlock':if($('#pin').value===state.settings.pin){ui.unlocked=true;ui.mgrTab='current';render()}else{$('#pinerr').textContent='Wrong PIN — try again';}break;
+   case 'tab':ui.mgrTab=t.dataset.tab;if(ui.mgrTab==='edit'&&!ui.edit)startEdit(state.current,null);render();window.scrollTo(0,0);break;
+   case 'editorder':startEdit(t.dataset.m,t.dataset.id);render();window.scrollTo(0,0);break;
+   case 'newfor':startEdit(t.dataset.m,null);render();break;
+   case 'eadd':{keepEditFields();const c=t.dataset.c;ui.edit.items[c]=(parseInt(ui.edit.items[c],10)||0)+1;ui.edit.pq='';render();break}
+   case 'edel':keepEditFields();delete ui.edit.items[t.dataset.c];render();break;
+   case 'esave':saveEdit();break;
+   case 'csv':downloadCSV();break;
+   case 'print':printSupplier();break;
+   case 'printpick':{const mk=ui.mgrMonth;printDoc('Picking lists — '+monthName(mk),pickHTML(mk,compile(mk)));break}
+   case 'savecut':{const v=parseInt($('#cutday').value,10);if(!(v>=1&&v<=31)){toast('Pick a day 1–31');return}state.settings.cutoffDay=v;save();toast('Cut-off set to day '+v);render();break}
+   case 'newmonth':{const k=addMonths(state.current,1);if(!confirm('Start '+monthName(k)+'? '+monthName(state.current)+' will close to cleaners.'))return;createMonth(k);state.current=k;ui.mgrMonth=k;state.log.push({ts:new Date().toISOString(),msg:'Manual new month '+k});save();me.basket={};saveMe();toast(monthName(k)+' started');render();break}
+   case 'setdemo':{const v=$('#demodate').value;if(!v)return;localStorage.setItem(LS_NOW,v);toast('Demo date set');render();break}
+   case 'cleardemo':localStorage.removeItem(LS_NOW);render();break;
+   case 'reset':if(confirm('Reset all example data?')){localStorage.removeItem(LS);localStorage.removeItem(LS_ME);localStorage.removeItem(LS_NOW);load();ui.edit=null;ui.mgrMonth=null;render()}break;
+  }
+});
+document.addEventListener('input',ev=>{
+  const t=ev.target;
+  if(t.id==='q'){ui.q=t.value;const c=document.querySelector('.search .clear');if(c)c.hidden=!t.value;renderContent();return}
+  if(t.id==='epq'){ui.edit.pq=t.value;renderEditResults();return}
+  if(t.id==='rq'){ui.ruleQ=t.value;$('#rbody').innerHTML=rulesRows();return}
+  if(t.dataset.a==='eqty'){ui.edit.items[t.dataset.c]=t.value;return}
+});
+document.addEventListener('change',async ev=>{
+  const t=ev.target,a=t.dataset.a;
+  if(t.id==='pfile'&&t.files[0]){const note=$('#pnote').value;ui.photo=await resizeImage(t.files[0]);renderContent();$('#pnote').value=note;return}
+  if(a==='rule'){setRule(t.dataset.c,t.dataset.f,t.value);return}
+  if(a==='mmonth'){ui.mgrMonth=t.value;render();return}
+  if(a==='emonth'){keepEditFields();ui.edit.mk=t.value;ui.edit.id=null;ui.edit.items={};render();return}
+  if(a==='esite'){keepEditFields();ui.edit.site=t.value;ui.edit.id=null;ui.edit.items={};render();return}
+  if(a==='eorder'){if(t.value)startEdit(ui.edit.mk,t.value);else startEdit(ui.edit.mk,null,ui.edit.site);render();return}
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.id==='pin')$('#unlockbtn').click()});
+// keep countdown fresh, lock at cut-off and roll over at month change without a reload
+setInterval(()=>{
+  if(rollover()){render();return}
+  if(ui.view!=='cleaner')return;
+  const cd=$('#cd');
+  if(cd){if(!isOpen())render();else cd.textContent=countdown()}
+},30000);
+load();render();
+</script>
+</body>
+</html>
